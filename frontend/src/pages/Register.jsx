@@ -10,6 +10,7 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [pendingUserId, setPendingUserId] = useState(null);
   const [resendTimer, setResendTimer] = useState(0);
@@ -31,6 +32,12 @@ export default function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (isLoading) return;
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await axios.post('/auth/register', { name, email, phone, password });
@@ -103,6 +110,10 @@ export default function Register() {
             <div className="auth-form-group">
               <input type="password" placeholder="Password" required className="input-field" 
                      value={password} onChange={e => setPassword(e.target.value)} />
+            </div>
+            <div className="auth-form-group">
+              <input type="password" placeholder="Confirm Password" required className="input-field" 
+                     value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
             </div>
             <button type="submit" disabled={isLoading} className={`btn-primary auth-submit ${isLoading ? 'btn-loading' : ''}`}>
               {isLoading && <span className="spinner"></span>}
