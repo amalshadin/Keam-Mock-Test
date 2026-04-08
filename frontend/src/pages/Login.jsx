@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import ksuLogo from '../resources/ksu.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -39,6 +40,13 @@ export default function Login() {
         </form>
         <div className="auth-links">
           Don't have an account? <Link to="/register">Sign up</Link>
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 30, textAlign: 'center' }}>
+        <img src={ksuLogo} alt="KSU Logo" style={{ height: 60, width: 'auto', marginBottom: 8, opacity: 0.9 }} />
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600, letterSpacing: 1 }}>
+          GEC RIT KOTTAYAM
         </div>
       </div>
     </div>

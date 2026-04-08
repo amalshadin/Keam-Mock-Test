@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { History, Target, Calendar } from 'lucide-react';
+import ksuLogo from '../resources/ksu.png';
 
 export default function Dashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -81,6 +82,13 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 60, paddingBottom: 20 }}>
+        <img src={ksuLogo} alt="KSU Logo" style={{ height: 60, width: 'auto', marginBottom: 8, opacity: 0.9 }} />
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600, letterSpacing: 1 }}>
+          GEC RIT KOTTAYAM
         </div>
       </div>
     </div>
