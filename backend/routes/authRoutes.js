@@ -2,9 +2,10 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../prismaClient.js';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 const router = express.Router();
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 router.post('/register', async (req, res) => {
   const { name, email, password, phone } = req.body;
@@ -33,6 +34,7 @@ router.post('/register', async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // Store OTP in database
     await prisma.oTPVerification.create({
       data: {
         user_id: user.user_id,
@@ -42,26 +44,13 @@ router.post('/register', async (req, res) => {
       }
     });
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // Use SSL/TLS
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,
-      socketTimeout: 30000
-    });
-
     try {
-      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) throw new Error("Missing SMTP credentials");
+      if (!process.env.RESEND_API_KEY) throw new Error("Missing RESEND_API_KEY");
       
-      console.log(`[Email] Attempting to send OTP to ${email}...`);
+      console.log(`[Email] Attempting to send OTP to ${email} via Resend...`);
       
-      await transporter.sendMail({
-        from: `"KEAM Support" <${process.env.SMTP_USER}>`,
+      await resend.emails.send({
+        from: 'KEAM Support <onboarding@resend.dev>',
         to: email,
         subject: "Your KEAM Mock Test OTP",
         text: `Your OTP for account verification is: ${otp}. It is valid for 5 minutes.`
@@ -69,7 +58,7 @@ router.post('/register', async (req, res) => {
       
       console.log(`[Email] OTP successfully sent to ${email}`);
     } catch (mailErr) {
-      console.error("[Email Error] Failed to send via SMTP:", mailErr.message);
+      console.error("[Email Error] Resend failed:", mailErr.message);
       console.log(`\n\n=== MOCK EMAIL OTP FALLBACK ===\nTo: ${email}\nOTP: ${otp}\n================================\n\n`);
     }
 
@@ -96,26 +85,13 @@ router.post('/resend-otp', async (req, res) => {
       }
     });
 
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 30000
-    });
-
     try {
-      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) throw new Error("Missing SMTP credentials");
+      if (!process.env.RESEND_API_KEY) throw new Error("Missing RESEND_API_KEY");
       
-      console.log(`[Email] Attempting to resend OTP to ${user.email}...`);
+      console.log(`[Email] Attempting to resend OTP to ${user.email} via Resend...`);
 
-      await transporter.sendMail({
-        from: `"KEAM Support" <${process.env.SMTP_USER}>`,
+      await resend.emails.send({
+        from: 'KEAM Support <onboarding@resend.dev>',
         to: user.email,
         subject: "Your KEAM Mock Test OTP (Resend)",
         text: `Your new OTP for account verification is: ${otp}. It is valid for 5 minutes.`
@@ -123,7 +99,7 @@ router.post('/resend-otp', async (req, res) => {
 
       console.log(`[Email] Resend OTP successfully sent to ${user.email}`);
     } catch (mailErr) {
-      console.error("[Email Error] Failed to resend via SMTP:", mailErr.message);
+      console.error("[Email Error] Resend failed:", mailErr.message);
       console.log(`\n\n=== MOCK EMAIL OTP FALLBACK ===\nTo: ${user.email}\nOTP: ${otp}\n================================\n\n`);
     }
 

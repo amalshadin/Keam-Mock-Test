@@ -29,21 +29,27 @@ async function main() {
       duration_minutes: 180,
       start_time: new Date(),
       end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      price: 100.0
+      price: 50.0
     }
   });
 
   // 3. Create Questions & Options
   const qs = [
-    { text: "What is the SI unit of force?", subjectId: physics.subject_id, options: [
-      { text: "Newton", correct: true }, { text: "Joule", correct: false }, { text: "Watt", correct: false }, { text: "Pascal", correct: false }
-    ]},
-    { text: "What is the atomic number of Carbon?", subjectId: chemistry.subject_id, options: [
-      { text: "5", correct: false }, { text: "6", correct: true }, { text: "7", correct: false }, { text: "8", correct: false }
-    ]},
-    { text: "What is the derivative of x^2?", subjectId: maths.subject_id, options: [
-      { text: "x", correct: false }, { text: "2x", correct: true }, { text: "x^3/3", correct: false }, { text: "2", correct: false }
-    ]}
+    {
+      text: "What is the SI unit of force?", subjectId: physics.subject_id, options: [
+        { text: "Newton", correct: true }, { text: "Joule", correct: false }, { text: "Watt", correct: false }, { text: "Pascal", correct: false }
+      ]
+    },
+    {
+      text: "What is the atomic number of Carbon?", subjectId: chemistry.subject_id, options: [
+        { text: "5", correct: false }, { text: "6", correct: true }, { text: "7", correct: false }, { text: "8", correct: false }
+      ]
+    },
+    {
+      text: "What is the derivative of x^2?", subjectId: maths.subject_id, options: [
+        { text: "x", correct: false }, { text: "2x", correct: true }, { text: "x^3/3", correct: false }, { text: "2", correct: false }
+      ]
+    }
   ];
 
   for (let qInfo of qs) {
