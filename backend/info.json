@@ -1,0 +1,34 @@
+
+@prisma/config@7.7.0 | Apache-2.0 | deps: 4 | versions: 1371
+Internal package used to define and read Prisma configuration files
+https://github.com/prisma/prisma#readme
+
+dist
+.tarball: https://registry.npmjs.org/@prisma/config/-/config-7.7.0.tgz
+.shasum: a2be9a11dd431bbe56d4bce837424486ce7fa4e8
+.integrity: sha512-hmPI3tKLO2aP0Y5vugbjcnA9qqlfJndiT6ds4tw28U5hNHLWg+mHJEWAhjsSPgxjtmxhJ/EDIeIlyh+3Us0OPg==
+.unpackedSize: 41.9 kB
+
+dependencies:
+c12: 3.1.0
+deepmerge-ts: 7.1.5
+effect: 3.20.0
+empathic: 2.0.0
+
+maintainers:
+- jkomyno <alberto.schiabel@gmail.com>
+- nilubava <nilubava@gmail.com>
+- prismabot <bot-npm@prisma.io>
+- aqrln <alex@aqrln.net>
+- tylerhogarth <tylerhogarth@gmail.com>
+- ankur-datta-007 <dev.ankur.datta@gmail.com>
+- jloots <loots@prisma.io>
+
+dist-tags:
+dev: 7.7.0-dev.5
+integration: 7.7.0-integration-feat-bootstrap-ux-fixes.9
+latest: 7.7.0
+patch-dev: 6.19.1-dev.4
+prev: 6.19.3
+
+published yesterday by GitHub Actions <npm-oidc-no-reply@github.com>

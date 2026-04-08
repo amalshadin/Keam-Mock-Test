@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id       Int           @id @default(autoincrement())
+  name          String
+  email         String        @unique
+  password_hash String
+  created_at    DateTime      @default(now())
+  attempts      TestAttempt[]
+}
+
+model Subject {
+  subject_id   Int        @id @default(autoincrement())
+  subject_name String     @unique
+  questions    Question[]
+}
+
+model Question {
+  question_id   Int            @id @default(autoincrement())
+  subject_id    Int
+  question_text String
+  subject       Subject        @relation(fields: [subject_id], references: [subject_id])
+  options       Option[]
+  tests         TestQuestion[]
+  answers       Answer[]
+
+  @@index([subject_id])
+}
+
+model Option {
+  option_id   Int      @id @default(autoincrement())
+  question_id Int
+  option_text String
+  is_correct  Boolean
+  question    Question @relation(fields: [question_id], references: [question_id])
+  answers     Answer[]
+
+  @@index([question_id])
+}
+
+model Test {
+  test_id          Int            @id @default(autoincrement())
+  title            String
+  duration_minutes Int            @default(180)
+  created_at       DateTime       @default(now())
+  questions        TestQuestion[]
+  attempts         TestAttempt[]
+}
+
+model TestQuestion {
+  test_id     Int
+  question_id Int
+  test        Test     @relation(fields: [test_id], references: [test_id])
+  question    Question @relation(fields: [question_id], references: [question_id])
+
+  @@id([test_id, question_id])
+}
+
+model TestAttempt {
+  attempt_id   Int       @id @default(autoincrement())
+  user_id      Int
+  test_id      Int
+  started_at   DateTime  @default(now())
+  completed_at DateTime?
+  user         User      @relation(fields: [user_id], references: [user_id])
+  test         Test      @relation(fields: [test_id], references: [test_id])
+  answers      Answer[]
+}
+
+model Answer {
+  attempt_id           Int
+  question_id          Int
+  selected_option_id   Int?
+  is_marked_for_review Boolean  @default(false)
+  attempt              TestAttempt @relation(fields: [attempt_id], references: [attempt_id])
+  question             Question    @relation(fields: [question_id], references: [question_id])
+  option               Option?     @relation(fields: [selected_option_id], references: [option_id])
+
+  @@id([attempt_id, question_id])
+  @@index([attempt_id])
+}
