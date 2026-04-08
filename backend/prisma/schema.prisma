@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-  user_id       Int           @id @default(autoincrement())
-  name          String
-  email         String             @unique
-  phone         String?            @unique
-  password_hash String
-  is_verified      Boolean            @default(false)
+  user_id          Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  password_hash    String
   created_at       DateTime           @default(now())
-  attempts         TestAttempt[]
+  is_verified      Boolean            @default(false)
+  phone            String?
   registrations    ExamRegistration[]
   otpVerifications OTPVerification[]
+  attempts         TestAttempt[]
 }
 
 model Subject {
@@ -30,10 +30,10 @@ model Question {
   question_id   Int            @id @default(autoincrement())
   subject_id    Int
   question_text String
-  subject       Subject        @relation(fields: [subject_id], references: [subject_id])
-  options       Option[]
-  tests         TestQuestion[]
   answers       Answer[]
+  options       Option[]
+  subject       Subject        @relation(fields: [subject_id], references: [subject_id])
+  tests         TestQuestion[]
 
   @@index([subject_id])
 }
@@ -43,8 +43,8 @@ model Option {
   question_id Int
   option_text String
   is_correct  Boolean
-  question    Question @relation(fields: [question_id], references: [question_id])
   answers     Answer[]
+  question    Question @relation(fields: [question_id], references: [question_id])
 
   @@index([question_id])
 }
@@ -53,37 +53,36 @@ model Test {
   test_id          Int                @id @default(autoincrement())
   title            String
   duration_minutes Int                @default(180)
-  start_time       DateTime?          // Optional for backwards compat, required for structured exams
-  end_time         DateTime?
-  price            Float              @default(50.0) // Exam Entry Fee
   created_at       DateTime           @default(now())
-  questions        TestQuestion[]
-  attempts         TestAttempt[]
+  end_time         DateTime?
+  price            Float              @default(50.0)
+  start_time       DateTime?
   registrations    ExamRegistration[]
+  attempts         TestAttempt[]
+  questions        TestQuestion[]
 }
 
 model TestQuestion {
   test_id     Int
   question_id Int
-  test        Test     @relation(fields: [test_id], references: [test_id])
   question    Question @relation(fields: [question_id], references: [question_id])
+  test        Test     @relation(fields: [test_id], references: [test_id])
 
   @@id([test_id, question_id])
 }
 
 model TestAttempt {
   attempt_id      Int              @id @default(autoincrement())
-  registration_id String           @unique
   user_id         Int
   test_id         Int
-  status          AttemptStatus    @default(STARTED)
   started_at      DateTime         @default(now())
   completed_at    DateTime?
-  
-  registration    ExamRegistration? @relation(fields: [registration_id], references: [registration_id])
-  user            User             @relation(fields: [user_id], references: [user_id])
-  test            Test             @relation(fields: [test_id], references: [test_id])
+  registration_id String           @unique
+  status          AttemptStatus    @default(STARTED)
   answers         Answer[]
+  registration    ExamRegistration @relation(fields: [registration_id], references: [registration_id])
+  test            Test             @relation(fields: [test_id], references: [test_id])
+  user            User             @relation(fields: [user_id], references: [user_id])
 
   @@index([user_id])
   @@index([test_id])
@@ -93,7 +92,7 @@ model Answer {
   attempt_id           Int
   question_id          Int
   selected_option_id   Int?
-  is_marked_for_review Boolean  @default(false)
+  is_marked_for_review Boolean     @default(false)
   attempt              TestAttempt @relation(fields: [attempt_id], references: [attempt_id])
   question             Question    @relation(fields: [question_id], references: [question_id])
   option               Option?     @relation(fields: [selected_option_id], references: [option_id])
@@ -110,12 +109,22 @@ model ExamRegistration {
   payment_id      String?
   amount          Float
   registered_at   DateTime      @default(now())
-  
-  user            User          @relation(fields: [user_id], references: [user_id])
   test            Test          @relation(fields: [test_id], references: [test_id])
+  user            User          @relation(fields: [user_id], references: [user_id])
   attempt         TestAttempt?
 
   @@unique([user_id, test_id])
+}
+
+model OTPVerification {
+  id         String   @id @default(uuid())
+  user_id    Int
+  otp_code   String
+  type       String   @default("EMAIL")
+  expires_at DateTime
+  is_used    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [user_id])
 }
 
 enum PaymentStatus {
@@ -127,16 +136,4 @@ enum PaymentStatus {
 enum AttemptStatus {
   STARTED
   SUBMITTED
-}
-
-model OTPVerification {
-  id         String   @id @default(uuid())
-  user_id    Int
-  otp_code   String
-  type       String   @default("EMAIL")
-  expires_at DateTime
-  is_used    Boolean  @default(false)
-  created_at DateTime @default(now())
-  
-  user       User     @relation(fields: [user_id], references: [user_id])
 }
