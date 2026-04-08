@@ -26,7 +26,10 @@ async function main() {
   const test = await prisma.test.create({
     data: {
       title: 'KEAM Mock Test 1',
-      duration_minutes: 180
+      duration_minutes: 180,
+      start_time: new Date(),
+      end_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      price: 100.0
     }
   });
 

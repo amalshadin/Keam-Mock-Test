@@ -5,12 +5,36 @@ import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.post('/start', protect, async (req, res) => {
-  const { test_id } = req.body;
+  const { registration_id } = req.body;
   try {
+    const registration = await prisma.examRegistration.findUnique({
+      where: { registration_id },
+      include: { test: true, attempt: true }
+    });
+
+    if (!registration || registration.user_id !== req.user.userId) {
+      return res.status(403).json({ error: 'Unauthorized or invalid registration' });
+    }
+
+    if (registration.payment_status !== 'PAID') {
+      return res.status(403).json({ error: 'Registration fee not paid' });
+    }
+
+    const test = registration.test;
+    const now = new Date();
+    if (test.start_time && now < test.start_time) return res.status(403).json({ error: 'Exam not started yet' });
+    if (test.end_time && now > test.end_time) return res.status(403).json({ error: 'Exam ended' });
+
+    if (registration.attempt) {
+      return res.status(400).json({ error: 'Already attempted' });
+    }
+
     const attempt = await prisma.testAttempt.create({
       data: {
-        user_id: req.user.userId,
-        test_id: parseInt(test_id)
+        registration_id,
+        user_id: registration.user_id,
+        test_id: registration.test_id,
+        status: 'STARTED'
       }
     });
     res.json(attempt);
@@ -72,7 +96,7 @@ router.put('/:id/answer', protect, async (req, res) => {
     const answer = await prisma.$transaction(async (tx) => {
       const attempt = await tx.testAttempt.findUnique({ where: { attempt_id } });
       if (!attempt || attempt.user_id !== req.user.userId) throw new Error('Unauthorized attempt');
-      if (attempt.completed_at) throw new Error('Test already submitted');
+      if (attempt.status === 'SUBMITTED' || attempt.completed_at) throw new Error('Test already submitted');
 
       return await tx.answer.upsert({
         where: {
@@ -108,7 +132,7 @@ router.post('/:id/submit', protect, async (req, res) => {
   try {
     const attempt = await prisma.testAttempt.findUnique({ where: { attempt_id }, include: { test: true } });
     if (!attempt || attempt.user_id !== req.user.userId) return res.status(403).json({ error: 'Unauthorized attempt' });
-    if (attempt.completed_at) return res.json(attempt);
+    if (attempt.status === 'SUBMITTED' || attempt.completed_at) return res.json(attempt);
 
     // Validate backend timer: give a 2 min grace period
     const now = new Date();
@@ -120,7 +144,7 @@ router.post('/:id/submit', protect, async (req, res) => {
 
     const completed = await prisma.testAttempt.update({
       where: { attempt_id },
-      data: { completed_at: now }
+      data: { completed_at: now, status: 'SUBMITTED' }
     });
 
     res.json(completed);

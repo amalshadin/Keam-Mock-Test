@@ -4,6 +4,19 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Get all available tests (for dashboard)
+router.get('/', protect, async (req, res) => {
+  try {
+    const tests = await prisma.test.findMany({
+      orderBy: { created_at: 'desc' },
+      select: { test_id: true, title: true, duration_minutes: true, start_time: true, end_time: true, price: true }
+    });
+    res.json(tests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get test details and questions with options (no is_correct)
 router.get('/:id', protect, async (req, res) => {
   const testId = parseInt(req.params.id);

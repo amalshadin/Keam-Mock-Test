@@ -48,6 +48,9 @@ export default function Login() {
         <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 600, letterSpacing: 1 }}>
           GEC RIT KOTTAYAM
         </div>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: 4, opacity: 0.8 }}>
+          Site maintained by Amal Shadin, for support contact 9567325591
+        </div>
       </div>
     </div>
   );
