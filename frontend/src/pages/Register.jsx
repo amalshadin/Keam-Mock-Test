@@ -13,6 +13,7 @@ export default function Register() {
   const [otp, setOtp] = useState('');
   const [pendingUserId, setPendingUserId] = useState(null);
   const [resendTimer, setResendTimer] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const res = await axios.post('/auth/register', { name, email, phone, password });
       toast.success(res.data.message || 'OTP sent to your email!');
@@ -37,11 +40,15 @@ export default function Register() {
       setResendTimer(60); // Initial cooldown
     } catch (err) {
       toast.error(err.response?.data?.error || 'Registration failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const res = await axios.post('/auth/verify-otp', { user_id: pendingUserId, otp_code: otp });
       login(res.data, res.data.token);
@@ -49,16 +56,22 @@ export default function Register() {
       navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Invalid or expired OTP');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleResend = async () => {
+    if (isLoading || resendTimer > 0) return;
+    setIsLoading(true);
     try {
       await axios.post('/auth/resend-otp', { user_id: pendingUserId });
       toast.success('A new OTP has been sent!');
       setResendTimer(60);
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed to resend OTP');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,7 +104,10 @@ export default function Register() {
               <input type="password" placeholder="Password" required className="input-field" 
                      value={password} onChange={e => setPassword(e.target.value)} />
             </div>
-            <button type="submit" className="btn-primary auth-submit">Register</button>
+            <button type="submit" disabled={isLoading} className={`btn-primary auth-submit ${isLoading ? 'btn-loading' : ''}`}>
+              {isLoading && <span className="spinner"></span>}
+              {isLoading ? 'Registering...' : 'Register'}
+            </button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp}>
@@ -103,7 +119,10 @@ export default function Register() {
                      style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: 8, marginBottom: 16 }}
                      value={otp} onChange={e => setOtp(e.target.value)} />
             </div>
-            <button type="submit" className="btn-primary auth-submit">Verify OTP & Login</button>
+            <button type="submit" disabled={isLoading} className={`btn-primary auth-submit ${isLoading ? 'btn-loading' : ''}`}>
+              {isLoading && <span className="spinner"></span>}
+              {isLoading ? 'Verifying...' : 'Verify OTP & Login'}
+            </button>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, gap: 12 }}>
               <button type="button" onClick={handleCancel} className="btn-danger" style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', color: '#fff', cursor: 'pointer' }}>
                 Cancel
@@ -111,19 +130,25 @@ export default function Register() {
               <button 
                 type="button" 
                 onClick={handleResend} 
-                disabled={resendTimer > 0} 
+                disabled={resendTimer > 0 || isLoading} 
+                className={isLoading && resendTimer === 0 ? 'btn-loading' : ''}
                 style={{ 
                   flex: 1, 
                   padding: '10px', 
                   borderRadius: 8, 
                   border: 'none', 
                   color: '#fff', 
-                  cursor: resendTimer > 0 ? 'not-allowed' : 'pointer',
-                  background: resendTimer > 0 ? '#4b5563' : '#3b82f6',
-                  opacity: resendTimer > 0 ? 0.7 : 1
+                  cursor: (resendTimer > 0 || isLoading) ? 'not-allowed' : 'pointer',
+                  background: (resendTimer > 0 || isLoading) ? '#4b5563' : '#3b82f6',
+                  opacity: (resendTimer > 0 || isLoading) ? 0.7 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
               >
-                {resendTimer > 0 ? `Resend (${resendTimer}s)` : 'Resend OTP'}
+                {isLoading && resendTimer === 0 && <span className="spinner"></span>}
+                {resendTimer > 0 ? `Resend (${resendTimer}s)` : (isLoading ? 'Sending...' : 'Resend OTP')}
               </button>
             </div>
           </form>
