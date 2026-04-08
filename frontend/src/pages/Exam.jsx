@@ -119,6 +119,7 @@ export default function Exam() {
   const getStatusClass = (qId) => {
     const ans = answersMap[qId];
     if (!ans) return 'status-not-visited';
+    if (ans.selected_option_id && ans.is_marked_for_review) return 'status-marked-answered';
     if (ans.is_marked_for_review) return 'status-marked';
     if (ans.selected_option_id) return 'status-answered';
     return 'status-unattempted'; // visited but not answered
@@ -249,6 +250,7 @@ export default function Exam() {
 
             <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', gap: 12, fontSize: '0.9rem' }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--success)' }}></div> Answered</div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: '#a855f7' }}></div> Answered & Marked</div>
                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--warning)' }}></div> Marked for Review</div>
                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--panel-bg)', border: '1px solid var(--panel-border)' }}></div> Not Answered</div>
                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: 'transparent', border: '1px solid var(--panel-border)' }}></div> Not Visited</div>

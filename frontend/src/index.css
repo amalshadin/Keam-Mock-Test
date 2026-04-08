@@ -80,6 +80,7 @@ a:hover { color: var(--accent-hover); }
 .status-unattempted { background-color: var(--panel-bg); border-color: var(--panel-border); }
 .status-answered { background-color: var(--success); border-color: var(--success); color: white; }
 .status-marked { background-color: var(--warning); border-color: var(--warning); color: white; }
+.status-marked-answered { background-color: #a855f7; border-color: #a855f7; color: white; }
 .status-not-visited { background-color: transparent; border-color: var(--panel-border); }
 
 /* Inputs */

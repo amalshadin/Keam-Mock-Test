@@ -68,7 +68,17 @@ export default function Result() {
           </div>
         </div>
 
-        {weakSubject && (
+        {parseFloat(data.accuracy) === 100 ? (
+          <div className="glass-panel" style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: 16, borderRadius: 12 }}>
+              <Target size={32} color="var(--success)" />
+            </div>
+            <div>
+              <h4 style={{ fontSize: '1.2rem', marginBottom: 4 }}>Flawless Performance</h4>
+              <p style={{ color: 'var(--text-secondary)' }}>Congratulations, you've nailed it! Perfect accuracy achieved.</p>
+            </div>
+          </div>
+        ) : weakSubject && (
         <div className="glass-panel" style={{ padding: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: 16, borderRadius: 12 }}>
             <Target size={32} color="var(--warning)" />
