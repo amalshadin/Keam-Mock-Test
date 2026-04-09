@@ -116,8 +116,12 @@ export default function Register() {
                      value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
             </div>
             <button type="submit" disabled={isLoading} className={`btn-primary auth-submit ${isLoading ? 'btn-loading' : ''}`}>
-              {isLoading && <span className="spinner"></span>}
-              {isLoading ? 'Registering...' : 'Register'}
+              {isLoading ? (
+                <>
+                  <span className="spinner-sm" style={{ marginRight: 10 }}></span>
+                  Registering...
+                </>
+              ) : 'Register'}
             </button>
           </form>
         ) : (
@@ -131,8 +135,12 @@ export default function Register() {
                      value={otp} onChange={e => setOtp(e.target.value)} />
             </div>
             <button type="submit" disabled={isLoading} className={`btn-primary auth-submit ${isLoading ? 'btn-loading' : ''}`}>
-              {isLoading && <span className="spinner"></span>}
-              {isLoading ? 'Verifying...' : 'Verify OTP & Login'}
+              {isLoading ? (
+                <>
+                  <span className="spinner-sm" style={{ marginRight: 10 }}></span>
+                  Verifying...
+                </>
+              ) : 'Verify OTP & Login'}
             </button>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16, gap: 12 }}>
               <button type="button" onClick={handleCancel} className="btn-danger" style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', color: '#fff', cursor: 'pointer' }}>
@@ -158,7 +166,7 @@ export default function Register() {
                   gap: '8px'
                 }}
               >
-                {isLoading && resendTimer === 0 && <span className="spinner"></span>}
+                {isLoading && resendTimer === 0 && <span className="spinner-sm"></span>}
                 {resendTimer > 0 ? `Resend (${resendTimer}s)` : (isLoading ? 'Sending...' : 'Resend OTP')}
               </button>
             </div>

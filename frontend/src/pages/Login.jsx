@@ -8,18 +8,24 @@ import ksuLogo from '../resources/ksu.png';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+
     try {
+      setLoading(true);
       const res = await axios.post('/auth/login', { email, password });
       login(res.data, res.data.token);
       toast.success('Login successful!');
       navigate('/');
     } catch (err) {
       toast.error(err.response?.data?.error || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -36,7 +42,14 @@ export default function Login() {
             <input type="password" placeholder="Password" required className="input-field" 
                    value={password} onChange={e => setPassword(e.target.value)} />
           </div>
-          <button type="submit" className="btn-primary auth-submit">Login</button>
+          <button type="submit" disabled={loading} className={`btn-primary auth-submit ${loading ? 'btn-loading' : ''}`}>
+            {loading ? (
+              <>
+                <span className="spinner-sm" style={{ marginRight: 10 }}></span>
+                Logging in...
+              </>
+            ) : "Login"}
+          </button>
         </form>
         <div className="auth-links">
           Don't have an account? <Link to="/register">Sign up</Link>
