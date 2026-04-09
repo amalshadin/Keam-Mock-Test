@@ -17,6 +17,8 @@ app.use('/api/tests', testRoutes);
 app.use('/api/attempts', attemptRoutes);
 app.use('/api/registrations', registrationRoutes);
 
+app.get('/api/health', (req, res) => res.json({ status: 'OK', message: 'Main server is alive!' }));
+
 const PORT = process.env.PORT || 5000;
 const HOST = "0.0.0.0";
 app.listen(PORT, HOST, () => {

@@ -1,7 +1,7 @@
 import prisma from './prismaClient.js';
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("Seeding database (idempotent mode)...");
 
   // 1. Create Subjects
   const physics = await prisma.subject.upsert({
@@ -22,9 +22,15 @@ async function main() {
     create: { subject_name: 'Mathematics' }
   });
 
-  // 2. Create a Test
-  const test = await prisma.test.create({
-    data: {
+  // 2. Create a Test (Forced ID 1 for consistency)
+  const test = await prisma.test.upsert({
+    where: { test_id: 1 },
+    update: {
+      title: 'KEAM Mock Test 1',
+      duration_minutes: 180,
+    },
+    create: {
+      test_id: 1,
       title: 'KEAM Mock Test 1',
       duration_minutes: 180,
       start_time: new Date(),
@@ -53,28 +59,47 @@ async function main() {
   ];
 
   for (let qInfo of qs) {
-    const q = await prisma.question.create({
-      data: {
-        question_text: qInfo.text,
-        subject_id: qInfo.subjectId,
-        options: {
-          create: qInfo.options.map(o => ({
-            option_text: o.text,
-            is_correct: o.correct
-          }))
-        }
-      }
+    // We check by text to avoid duplicates
+    const existingQ = await prisma.question.findFirst({
+      where: { question_text: qInfo.text }
     });
 
-    await prisma.testQuestion.create({
-      data: {
+    let qId;
+    if (existingQ) {
+      qId = existingQ.question_id;
+    } else {
+      const newQ = await prisma.question.create({
+        data: {
+          question_text: qInfo.text,
+          subject_id: qInfo.subjectId,
+          options: {
+            create: qInfo.options.map(o => ({
+              option_text: o.text,
+              is_correct: o.correct
+            }))
+          }
+        }
+      });
+      qId = newQ.question_id;
+    }
+
+    // Link to test
+    await prisma.testQuestion.upsert({
+      where: {
+        test_id_question_id: {
+          test_id: test.test_id,
+          question_id: qId
+        }
+      },
+      update: {},
+      create: {
         test_id: test.test_id,
-        question_id: q.question_id
+        question_id: qId
       }
     });
   }
 
-  console.log("Seeding finished.");
+  console.log("Seeding finished successfully.");
 }
 
 main()
