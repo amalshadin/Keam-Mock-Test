@@ -21,7 +21,8 @@ export default function Exam() {
   useEffect(() => {
     const fetchExamState = async () => {
       try {
-        const { data } = await axios.get(`/attempts/${attemptId}/state`);
+        console.log(`[Exam Room] Fetching state for attempt ID: ${attemptId} from baseURL: ${axios.defaults.baseURL}`);
+        const { data } = await axios.get(`attempts/${attemptId}/state`);
         setTestData({
           title: data.title,
           duration_minutes: data.duration_minutes

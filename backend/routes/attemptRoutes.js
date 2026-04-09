@@ -4,6 +4,8 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+router.get('/ping', (req, res) => res.json({ message: 'Attempts API is alive and updated!' }));
+
 router.post('/start', protect, async (req, res) => {
   const { registration_id } = req.body;
   try {
@@ -324,8 +326,14 @@ router.get('/:id/state', protect, async (req, res) => {
       }
     });
 
-    if (!attempt || attempt.user_id !== req.user.userId) {
-      return res.status(404).json({ error: 'Attempt not found' });
+    if (!attempt) {
+      console.log(`[Exam State] Attempt ${attempt_id} not found in database`);
+      return res.status(404).json({ error: 'Attempt record not found' });
+    }
+
+    if (attempt.user_id !== req.user.userId) {
+      console.log(`[Exam State] Unauthorized access: Attempt ${attempt_id} belongs to user ${attempt.user_id}, but request is from user ${req.user.userId}`);
+      return res.status(404).json({ error: 'Attempt not found (Unauthorized)' });
     }
 
     // Protection: If it's already submitted, they shouldn't be in the exam room
