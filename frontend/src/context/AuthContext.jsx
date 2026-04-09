@@ -8,9 +8,20 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Setup basic axios defaults
+  // Setup axios defaults and interceptors
   const API_BASE = import.meta.env.VITE_API_URL;
   axios.defaults.baseURL = API_BASE;
+
+  // Global Interceptor to inject token into EVERY request
+  axios.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  }, (error) => {
+    return Promise.reject(error);
+  });
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -19,7 +30,6 @@ export const AuthProvider = ({ children }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     }
     setLoading(false);
   }, []);
@@ -29,7 +39,6 @@ export const AuthProvider = ({ children }) => {
     setToken(jwtToken);
     localStorage.setItem('token', jwtToken);
     localStorage.setItem('user', JSON.stringify(userData));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
   };
 
   const logout = () => {
@@ -37,7 +46,6 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    delete axios.defaults.headers.common['Authorization'];
   };
 
   return (
