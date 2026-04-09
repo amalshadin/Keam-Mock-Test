@@ -117,13 +117,13 @@ export default function Dashboard() {
                   Duration: {test.duration_minutes} Minutes <br />
                   Registration Fee: ₹{test.price}
                 </p>
-                {hasAttempted ? (
+                {hasAttempted && reg.attempt.status === 'SUBMITTED' ? (
                   <button disabled className="btn-primary" style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>
                     ALREADY ATTEMPTED
                   </button>
                 ) : isRegistered ? (
                   <button onClick={() => startTest(reg.registration_id)} className="btn-primary" style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', background: 'var(--success)', borderColor: 'var(--success)' }}>
-                    START EXAM NOW
+                    {hasAttempted && reg.attempt.status === 'STARTED' ? 'RESUME EXAM' : 'START EXAM NOW'}
                   </button>
                 ) : (
                   <button onClick={() => handleRegister(test.test_id)} className="btn-primary" style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', background: '#a855f7', borderColor: '#a855f7' }}>

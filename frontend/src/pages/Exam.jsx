@@ -19,23 +19,41 @@ export default function Exam() {
   const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
-    // We assume test ID is 1 for this static mock, normally we'd fetch the attempt and testId
-    const fetchTest = async () => {
+    const fetchExamState = async () => {
       try {
-        const { data } = await axios.get('/tests/1');
-        setTestData(data);
+        const { data } = await axios.get(`/attempts/${attemptId}/state`);
+        setTestData({
+          title: data.title,
+          duration_minutes: data.duration_minutes
+        });
         setQuestions(data.questions);
-        setTimeLeft(data.duration_minutes * 60);
+        
+        // Calculate remaining time
+        const startTime = new Date(data.started_at).getTime();
+        const durationMs = data.duration_minutes * 60000;
+        const now = new Date().getTime();
+        const remainingSeconds = Math.max(0, Math.floor((startTime + durationMs - now) / 1000));
+        
+        setTimeLeft(remainingSeconds);
 
-        // Fetch existing attempt answers (if refreshed)
-        // A robust app would have GET /attempts/:id API to restore answersMap.
-        // For now, we start fresh on mount.
+        // Restore answers map
+        const initialAnswers = {};
+        data.answers.forEach(ans => {
+          initialAnswers[ans.question_id] = {
+            selected_option_id: ans.selected_option_id,
+            is_marked_for_review: ans.is_marked_for_review
+          };
+        });
+        setAnswersMap(initialAnswers);
+        
       } catch (error) {
-        toast.error('Failed to load test');
+        console.error("Exam load failed:", error);
+        toast.error(error.response?.data?.error || 'Failed to load test environment');
+        navigate('/'); // Redirect back to dashboard if state fetch fails
       }
     };
-    fetchTest();
-  }, []);
+    fetchExamState();
+  }, [attemptId, navigate]);
 
   // Timer logic
   useEffect(() => {

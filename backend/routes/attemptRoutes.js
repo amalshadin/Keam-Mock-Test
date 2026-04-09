@@ -26,6 +26,11 @@ router.post('/start', protect, async (req, res) => {
     if (test.end_time && now > test.end_time) return res.status(403).json({ error: 'Exam ended' });
 
     if (registration.attempt) {
+      const existing = registration.attempt;
+      // If it's started but not finished, let them resume
+      if (existing.status === 'STARTED' && !existing.completed_at) {
+        return res.json(existing);
+      }
       return res.status(400).json({ error: 'Already attempted' });
     }
 
@@ -118,10 +123,10 @@ router.put('/:id/answer', protect, async (req, res) => {
     res.json(answer);
   } catch (error) {
     if (error.message === 'Test already submitted') {
-       return res.status(400).json({ error: error.message });
+      return res.status(400).json({ error: error.message });
     }
     if (error.message === 'Unauthorized attempt') {
-       return res.status(403).json({ error: error.message });
+      return res.status(403).json({ error: error.message });
     }
     res.status(500).json({ error: error.message });
   }
@@ -138,7 +143,7 @@ router.post('/:id/submit', protect, async (req, res) => {
     const now = new Date();
     const durationMs = attempt.test.duration_minutes * 60000;
     const deadline = new Date(attempt.started_at.getTime() + durationMs + 120000); // +2 mins grace
-    
+
     // We allow submission even if passed, we just record completed_at. The frontend will block it. 
     // If it's way past, the system auto submitted it theoretically, but here we just mark it completed.
 
@@ -290,6 +295,66 @@ router.get('/:id/review', protect, async (req, res) => {
     });
 
     res.json(reviewData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/:id/state', protect, async (req, res) => {
+  const attempt_id = parseInt(req.params.id);
+
+  try {
+    const attempt = await prisma.testAttempt.findUnique({
+      where: { attempt_id },
+      include: {
+        test: {
+          include: {
+            questions: {
+              include: {
+                question: {
+                  include: {
+                    options: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        answers: true
+      }
+    });
+
+    if (!attempt || attempt.user_id !== req.user.userId) {
+      return res.status(404).json({ error: 'Attempt not found' });
+    }
+
+    // Protection: If it's already submitted, they shouldn't be in the exam room
+    if (attempt.status === 'SUBMITTED' || attempt.completed_at) {
+      return res.status(400).json({ error: 'Test already submitted' });
+    }
+
+    // Remove correct answers for exam mode
+    const questions = attempt.test.questions.map(tq => {
+      const q = tq.question;
+      return {
+        question_id: q.question_id,
+        question_text: q.question_text,
+        options: q.options.map(o => ({
+          option_id: o.option_id,
+          option_text: o.option_text
+        }))
+      };
+    });
+
+    res.json({
+      attempt_id: attempt.attempt_id,
+      started_at: attempt.started_at,
+      duration_minutes: attempt.test.duration_minutes,
+      title: attempt.test.title,
+      questions,
+      answers: attempt.answers
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
