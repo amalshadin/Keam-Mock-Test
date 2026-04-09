@@ -46,16 +46,16 @@ router.post('/register', async (req, res) => {
 
     try {
       if (!process.env.RESEND_API_KEY) throw new Error("Missing RESEND_API_KEY");
-      
+
       console.log(`[Email] Attempting to send OTP to ${email} via Resend...`);
-      
+
       await resend.emails.send({
-        from: 'KEAM Support <onboarding@resend.dev>',
+        from: `KEAM Support <${process.env.FROM_EMAIL}>`,
         to: email,
         subject: "Your KEAM Mock Test OTP",
         text: `Your OTP for account verification is: ${otp}. It is valid for 5 minutes.`
       });
-      
+
       console.log(`[Email] OTP successfully sent to ${email}`);
     } catch (mailErr) {
       console.error("[Email Error] Resend failed:", mailErr.message);
@@ -87,7 +87,7 @@ router.post('/resend-otp', async (req, res) => {
 
     try {
       if (!process.env.RESEND_API_KEY) throw new Error("Missing RESEND_API_KEY");
-      
+
       console.log(`[Email] Attempting to resend OTP to ${user.email} via Resend...`);
 
       await resend.emails.send({
