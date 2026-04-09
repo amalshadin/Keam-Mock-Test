@@ -91,7 +91,7 @@ router.post('/resend-otp', async (req, res) => {
       console.log(`[Email] Attempting to resend OTP to ${user.email} via Resend...`);
 
       await resend.emails.send({
-        from: 'KEAM Support <onboarding@resend.dev>',
+        from: `KEAM Support <${process.env.FROM_EMAIL}>`,
         to: user.email,
         subject: "Your KEAM Mock Test OTP (Resend)",
         text: `Your new OTP for account verification is: ${otp}. It is valid for 5 minutes.`
