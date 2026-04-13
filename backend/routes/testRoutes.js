@@ -11,7 +11,10 @@ router.get('/', protect, async (req, res) => {
       orderBy: { created_at: 'desc' },
       select: { test_id: true, title: true, duration_minutes: true, start_time: true, end_time: true, price: true }
     });
-    res.json(tests);
+    res.json({
+      tests,
+      free_mode: process.env.FREE_EXAM_MODE === 'true'
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

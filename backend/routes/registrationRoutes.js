@@ -50,6 +50,14 @@ router.post('/register', protect, async (req, res) => {
         return res.status(400).json({ error: 'You are already registered for this exam.' });
       }
       
+      if (process.env.FREE_EXAM_MODE === 'true') {
+        const updated = await prisma.examRegistration.update({
+          where: { registration_id: existingEntry.registration_id },
+          data: { payment_status: 'PAID', amount: 0 }
+        });
+        return res.json(updated);
+      }
+
       // If PENDING, generate a new Razorpay order to be safe
       const optionEx = { amount: testInfo.price * 100, currency: "INR", receipt: existingEntry.registration_id };
       const orderEx = await razorpay.orders.create(optionEx);
@@ -63,6 +71,18 @@ router.post('/register', protect, async (req, res) => {
     }
 
     // New Registration
+    if (process.env.FREE_EXAM_MODE === 'true') {
+      const reg = await prisma.examRegistration.create({
+        data: {
+          user_id: req.user.userId,
+          test_id: parseInt(test_id),
+          amount: 0,
+          payment_status: 'PAID'
+        }
+      });
+      return res.json(reg);
+    }
+
     const reg = await prisma.examRegistration.create({
       data: {
         user_id: req.user.userId,

@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [tests, setTests] = useState([]);
   const [myRegs, setMyRegs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [freeMode, setFreeMode] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // Keyed state for buttons
 
   useEffect(() => {
@@ -26,7 +27,8 @@ export default function Dashboard() {
           new Promise(res => setTimeout(res, 300))
         ]);
         setHistory(histRes.data);
-        setTests(testRes.data);
+        setTests(testRes.data.tests);
+        setFreeMode(testRes.data.free_mode);
         setMyRegs(regRes.data);
       } catch (err) {
         console.error("Failed to fetch dashboard data");
@@ -50,11 +52,22 @@ export default function Dashboard() {
     return myRegs.find(r => r.test_id === testId);
   }
 
-  const handleRegister = async (testId) => {
+  const handleRegister = async (testId, autoStart = false) => {
     if (actionLoading) return;
     try {
       setActionLoading(`register-${testId}`);
       const res = await axios.post('/registrations/register', { test_id: testId });
+      
+      if (res.data.payment_status === 'PAID') {
+        const regRes = await axios.get('/registrations/mine');
+        setMyRegs(regRes.data);
+        setActionLoading(null);
+        if (autoStart) {
+          startTest(res.data.registration_id, testId);
+        }
+        return;
+      }
+
       const { razorpay_order_id, amount, key_id, registration_id } = res.data;
 
       if (!key_id) {
@@ -141,7 +154,11 @@ export default function Dashboard() {
                   <h1 style={{ fontSize: '2rem', marginBottom: 16 }}>{test.title}</h1>
                   <p style={{ color: 'var(--text-secondary)', marginBottom: 30 }}>
                     Duration: {test.duration_minutes} Minutes <br />
-                    Registration Fee: ₹{test.price}
+                    {freeMode ? (
+                      <span style={{ color: 'var(--success)', fontWeight: 600 }}>FREE ACCESS ENABLED</span>
+                    ) : (
+                      `Registration Fee: ₹${test.price}`
+                    )}
                   </p>
                   {hasAttempted && reg.attempt.status === 'SUBMITTED' ? (
                     <button disabled className="btn-primary" style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>
@@ -159,13 +176,13 @@ export default function Dashboard() {
                     </button>
                   ) : (
                     <button 
-                      onClick={() => handleRegister(test.test_id)} 
+                      onClick={() => handleRegister(test.test_id, true)} 
                       disabled={actionLoading === `register-${test.test_id}`}
                       className={`btn-primary ${actionLoading === `register-${test.test_id}` ? 'btn-loading' : ''}`} 
-                      style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', background: '#a855f7', borderColor: '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+                      style={{ fontSize: '1.2rem', padding: '15px 40px', width: '100%', background: freeMode ? 'var(--success)' : '#a855f7', borderColor: freeMode ? 'var(--success)' : '#a855f7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
                     >
                       {actionLoading === `register-${test.test_id}` && <span className="spinner-sm"></span>}
-                      {actionLoading === `register-${test.test_id}` ? 'Processing...' : `PAY ₹${test.price} & REGISTER`}
+                      {actionLoading === `register-${test.test_id}` ? 'Processing...' : (freeMode ? 'START EXAM NOW' : `PAY ₹${test.price} & REGISTER`)}
                     </button>
                   )}
                 </div>
