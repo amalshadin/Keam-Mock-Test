@@ -15,17 +15,30 @@ router.post('/start', protect, async (req, res) => {
     });
 
     if (!registration || registration.user_id !== req.user.userId) {
+      console.log(`[DEBUG] Start failed: Unauthorized or invalid registration. user_id: ${registration?.user_id}, expected: ${req.user.userId}`);
       return res.status(403).json({ error: 'Unauthorized or invalid registration' });
     }
 
     if (registration.payment_status !== 'PAID') {
+      console.log(`[DEBUG] Start failed: Payment not paid. status: ${registration.payment_status}`);
       return res.status(403).json({ error: 'Registration fee not paid' });
     }
 
     const test = registration.test;
     const now = new Date();
-    if (test.start_time && now < test.start_time) return res.status(403).json({ error: 'Exam not started yet' });
-    if (test.end_time && now > test.end_time) return res.status(403).json({ error: 'Exam ended' });
+    const isFreeMode = process.env.FREE_EXAM_MODE === 'true';
+    console.log(`[DEBUG] Attempting to start test. isFreeMode: ${isFreeMode}, FREE_EXAM_MODE: "${process.env.FREE_EXAM_MODE}"`);
+
+    if (!isFreeMode) {
+      if (test.start_time && now < test.start_time) {
+        console.log(`[DEBUG] Start failed: Exam not started yet. start_time: ${test.start_time}`);
+        return res.status(403).json({ error: 'Exam not started yet' });
+      }
+      if (test.end_time && now > test.end_time) {
+        console.log(`[DEBUG] Start failed: Exam ended. end_time: ${test.end_time}`);
+        return res.status(403).json({ error: 'Exam ended' });
+      }
+    }
 
     if (registration.attempt) {
       const existing = registration.attempt;
