@@ -36,7 +36,7 @@ router.post('/start', protect, async (req, res) => {
       }
       if (test.end_time && now > test.end_time) {
         console.log(`[DEBUG] Start failed: Exam ended. end_time: ${test.end_time}`);
-        return res.status(403).json({ error: 'Exam ended' });
+        return res.status(403).json({ error: 'Exam ended - Backend Logic reached' });
       }
     }
 
